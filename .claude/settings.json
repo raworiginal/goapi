@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "deny": [
+      "Edit(./.env)",
+      "Edit(./go.mod)",
+      "Edit(./go.sum)",
+      "Write(./.env)",
+      "Write(./go.mod)",
+      "Write(./go.sum)"
+    ]
+  }
+}
