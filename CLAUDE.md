@@ -132,9 +132,40 @@ Consider: `~/.config/goapi/` or `~/.goapi/` for user data.
 
 ## Current Status
 
-This is a greenfield project. Start with:
-1. Initialize Go module: `go mod init github.com/user/go-api-cli`
-2. Set up basic project structure
-3. Implement core Cobra commands and data models
-4. Add simple storage layer
-5. Integrate BubbleTea for TUI
+### Completed (Session 1)
+
+1. ✅ Initialized Go module: `github.com/raworiginal/goapi`
+2. ✅ Set up basic project structure:
+   - `cmd/main.go` — Root Cobra command (`goapi`)
+   - `internal/project/project.go` — Project data model
+   - `internal/storage/storage.go` — GORM + SQLite database layer
+
+3. ✅ Implemented data models and storage:
+   - **Project struct:** `ID` (primary key), `Name` (unique), `BaseURL`, `DateCreated`, `Description`
+   - **Database location:** `~/.config/goapi/goapi.db` (SQLite)
+   - **Database decisions:** Using GORM ORM + numeric ID as primary key
+   - **CRUD operations:** `CreateProject()`, `GetProject()`, `ListProjects()`, `DeleteProject()`
+
+4. ✅ Dependencies added:
+   - Cobra (CLI framework)
+   - GORM (ORM)
+   - GORM SQLite driver
+
+### Next Steps
+
+**Session 2 priorities:**
+1. Create `cmd/project.go` with Cobra subcommands:
+   - `goapi project create --name "..." --url "..." [--description "..."]`
+   - `goapi project list`
+   - `goapi project delete --name "..."`
+2. Integrate storage layer with project commands (use CreateProject, GetProject, ListProjects, DeleteProject)
+3. Test the project command workflow
+4. Create `cmd/route.go` with similar subcommand structure
+5. Implement route data model and storage CRUD
+
+### Architectural Decisions Made
+
+- **Database:** SQLite with GORM (decided over JSON for scalability and learning value)
+- **Primary Key:** Numeric ID with unique constraint on name (allows future renaming, better for relationships)
+- **Data Location:** `~/.config/goapi/` (standard XDG-like path)
+- **ORM:** GORM (selected for learning and maintainability)

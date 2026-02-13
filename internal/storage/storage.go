@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/raworiginal/go-api-cli/internal/project"
+	"github.com/raworiginal/goapi/internal/project"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -39,3 +39,33 @@ func InitDB() error {
 }
 
 // CreateProject adds a new project to the database
+func CreateProject(p *project.Project) error {
+	result := DB.Create(p)
+	if result.Error != nil {
+		return result.Error
+	}
+	return nil
+}
+
+// GetProject retrieves a project by name
+func GetProject(name string) (*project.Project, error) {
+	var p project.Project
+	if err := DB.Where("name = ?", name).First(&p).Error; err != nil {
+		return nil, err
+	}
+	return &p, nil
+}
+
+// ListProjects retrieves all projects
+func ListProjects() ([]*project.Project, error) {
+	var projects []*project.Project
+	if err := DB.Find(&projects).Error; err != nil {
+		return nil, err
+	}
+	return projects, nil
+}
+
+// DeleteProject removes a project by name
+func DeleteProject(name string) error {
+	return DB.Where("name = ?", name).Delete(&project.Project{}).Error
+}
