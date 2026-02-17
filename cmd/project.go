@@ -67,11 +67,24 @@ var listCmd = &cobra.Command{
 }
 
 // TODO: Implement deleteCmd
+var deleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete a project",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		name, _ := cmd.Flags().GetString("name")
+		if err := storage.DeleteProject(name); err != nil {
+			return fmt.Errorf("failed to delete project: %w", err)
+		}
+		fmt.Printf("Deleted Project %s \n", name)
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(projectCmd)
 	projectCmd.AddCommand(createCmd)
 	projectCmd.AddCommand(listCmd)
-
+	projectCmd.AddCommand(deleteCmd)
 	createCmd.Flags().StringP("name", "n", "", "Project name (required)")
 	if err := createCmd.MarkFlagRequired("name"); err != nil {
 		panic(err)
@@ -82,4 +95,8 @@ func init() {
 	}
 	createCmd.Flags().StringP("description", "d", "", "Project description (optional)")
 	// TODO: Add flags to deleteCmd (name)
+	deleteCmd.Flags().StringP("name", "n", "", "Project name (required)")
+	if err := deleteCmd.MarkFlagRequired("name"); err != nil {
+		panic(err)
+	}
 }

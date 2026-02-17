@@ -132,8 +132,9 @@ Consider: `~/.config/goapi/` or `~/.goapi/` for user data.
 
 ## Current Status
 
-### Completed (Session 1)
+### Completed (Sessions 1-2)
 
+**Session 1:**
 1. ✅ Initialized Go module: `github.com/raworiginal/goapi`
 2. ✅ Set up basic project structure:
    - `cmd/main.go` — Root Cobra command (`goapi`)
@@ -151,17 +152,45 @@ Consider: `~/.config/goapi/` or `~/.goapi/` for user data.
    - GORM (ORM)
    - GORM SQLite driver
 
+**Session 2:**
+1. ✅ Created `cmd/project.go` with fully functional Cobra subcommands:
+   - `goapi project create --name "..." --url "..." [--description "..."]`
+     - Validates URLs using `net/url.Parse()`
+     - Returns user-friendly errors for duplicate names
+     - Prints success confirmation
+   - `goapi project list`
+     - Displays all projects in format: `Name - BaseURL (DateCreated)`
+     - Shows "No projects found" when list is empty
+   - `goapi project delete --name "..."`
+     - Removes projects from database
+     - Proper error handling
+
+2. ✅ Integrated storage layer with CLI:
+   - Updated `cmd/main.go` with `PersistentPreRunE` that calls `storage.InitDB()`
+   - All commands properly handle database errors
+   - Cobra's RunE pattern for automatic error handling
+
+3. ✅ Tested the project command workflow:
+   - Create, list, and delete operations work end-to-end
+   - Error handling verified (missing flags, duplicate names, database errors)
+   - Help messages display correctly for all commands
+
 ### Next Steps
 
-**Session 2 priorities:**
-1. Create `cmd/project.go` with Cobra subcommands:
-   - `goapi project create --name "..." --url "..." [--description "..."]`
-   - `goapi project list`
-   - `goapi project delete --name "..."`
-2. Integrate storage layer with project commands (use CreateProject, GetProject, ListProjects, DeleteProject)
-3. Test the project command workflow
-4. Create `cmd/route.go` with similar subcommand structure
-5. Implement route data model and storage CRUD
+**Session 3 priorities:**
+1. Create `cmd/route.go` with similar subcommand structure:
+   - `goapi route add --project "..." --method GET --path "/users" [--description "..."]`
+   - `goapi route list --project "..."`
+   - `goapi route delete --project "..." --id <route-id>`
+   - `goapi route update --project "..." --id <route-id> [flags]`
+2. Implement route data model in `internal/route/route.go`:
+   - Route struct with fields: ID, ProjectID (foreign key), Method, Path, Description, DateCreated
+   - Relationships: Route belongs to Project
+3. Implement route storage CRUD in `internal/storage/storage.go`:
+   - `CreateRoute()`, `GetRoute()`, `ListRoutesByProject()`, `DeleteRoute()`, `UpdateRoute()`
+   - Add `AutoMigrate(&route.Route{})` to InitDB
+4. Test route command workflow
+5. Begin work on API testing functionality (`cmd/test.go`)
 
 ### Architectural Decisions Made
 
