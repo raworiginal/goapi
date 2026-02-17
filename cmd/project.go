@@ -52,5 +52,14 @@ func init() {
 	// TODO: Add listCmd and deleteCmd to projectCmd
 
 	// TODO: Add flags to createCmd (name, url, description)
+	createCmd.Flags().StringP("name", "n", "", "Project name (required)")
+	if err := createCmd.MarkFlagRequired("name"); err != nil {
+		panic(err)
+	}
+	createCmd.Flags().String("url", "", "Base URL for project api (required)")
+	if err := createCmd.MarkFlagRequired("url"); err != nil {
+		panic(err)
+	}
+	createCmd.Flags().StringP("description", "d", "", "Project description (optional)")
 	// TODO: Add flags to deleteCmd (name)
 }
