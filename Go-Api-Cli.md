@@ -1,18 +1,21 @@
 # GO API Testing TUI/CLI App
 
-Test API routes in the command line tui. The user can create a project. The project will have a base URL, and then the user can add routes to the project. The user can run all routes or run a specific route. They can also output results to a JSON file or to the terminal. 
+Test API routes in the command line tui. The user can create a project. The project will have a base URL, and then the user can add routes to the project. The user can run all routes or run a specific route. They can also output results to a JSON file or to the terminal.
 
 ## name ideas
+
 - goapi
 - gorest
 
 ## tech stack
+
 - Go
 - Cobra
 - BubbleTea
 - SQLite?
 
-## User Stories 
+## User Stories
+
 - I want to be able to create a new project
 - I want to be able to add routes to a project.
 - I want to be able to set up authorization for the project: JWT, specifically.
