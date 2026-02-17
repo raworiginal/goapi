@@ -45,13 +45,33 @@ var createCmd = &cobra.Command{
 }
 
 // TODO: Implement listCmd
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all projects",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		projects, err := storage.ListProjects()
+		if err != nil {
+			return fmt.Errorf("failed to list all projects: %w", err)
+		}
+		if len(projects) == 0 {
+			fmt.Println("No projects found")
+			return nil
+		}
+
+		for _, p := range projects {
+			fmt.Printf("%v - %v (%v)\n", p.Name, p.BaseURL, p.DateCreated)
+		}
+
+		return nil
+	},
+}
+
 // TODO: Implement deleteCmd
 func init() {
 	rootCmd.AddCommand(projectCmd)
 	projectCmd.AddCommand(createCmd)
-	// TODO: Add listCmd and deleteCmd to projectCmd
+	projectCmd.AddCommand(listCmd)
 
-	// TODO: Add flags to createCmd (name, url, description)
 	createCmd.Flags().StringP("name", "n", "", "Project name (required)")
 	if err := createCmd.MarkFlagRequired("name"); err != nil {
 		panic(err)
