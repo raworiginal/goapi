@@ -2,6 +2,7 @@
 package storage
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -67,5 +68,12 @@ func ListProjects() ([]*project.Project, error) {
 
 // DeleteProject removes a project by name
 func DeleteProject(name string) error {
-	return DB.Where("name = ?", name).Delete(&project.Project{}).Error
+	result := DB.Where("name = ?", name).Delete(&project.Project{})
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("project '%s' not found", name)
+	}
+	return nil
 }
