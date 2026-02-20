@@ -21,3 +21,9 @@ type Route struct {
 	Description string     `json:"description"`
 	DateCreated time.Time  `gorm:"autoCreateTime" json:"date_created"`
 }
+
+type UpdateRouteInput struct {
+	Method      *HTTPMethod `json:"method,omitempty"`
+	Path        *string     `json:"path,omitempty"`
+	Description *string     `json:"description,omitempty"`
+}

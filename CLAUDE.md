@@ -132,7 +132,7 @@ Consider: `~/.config/goapi/` or `~/.goapi/` for user data.
 
 ## Current Status
 
-### Completed (Sessions 1-2)
+### Completed (Sessions 1-3)
 
 **Session 1:**
 1. ✅ Initialized Go module: `github.com/raworiginal/goapi`
@@ -175,22 +175,54 @@ Consider: `~/.config/goapi/` or `~/.goapi/` for user data.
    - Error handling verified (missing flags, duplicate names, database errors)
    - Help messages display correctly for all commands
 
+**Session 3:**
+1. ✅ Refactored storage layer for scalability:
+   - Split `internal/storage/storage.go` into multiple files:
+     - `storage.go` — Database initialization and global DB instance
+     - `project.go` — Project CRUD operations
+     - `route.go` — Route CRUD operations (see below)
+
+2. ✅ Implemented route data model in `internal/route/route.go`:
+   - **HTTPMethod custom type** — GET, POST, PUT, DELETE, PATCH constants for type safety
+   - **Route struct:** `ID`, `ProjectID` (foreign key), `Method` (HTTPMethod), `Path`, `Description`, `DateCreated`
+   - **Relationships:** Route belongs to Project (enforced at database level with GORM)
+
+3. ✅ Implemented complete route storage CRUD in `internal/storage/route.go`:
+   - `CreateRoute(r *route.Route) error` — Add routes to project
+   - `ListRoutesByProject(projectID uint) ([]*route.Route, error)` — Fetch all routes for a project
+   - `GetRoute(id uint) (*route.Route, error)` — Fetch single route by ID
+   - `UpdateRoute(id uint, updates *route.UpdateRouteInput) error` — Update route fields (type-safe)
+   - `DeleteRoute(id uint) error` — Remove route with "not found" error handling
+
+4. ✅ Implemented type-safe updates:
+   - **UpdateRouteInput struct** — Uses pointers (`*HTTPMethod`, `*string`) to distinguish "not provided" from "empty"
+   - GORM `Updates()` only modifies non-nil fields, preventing accidental overwrites
+
+5. ✅ Added route migration to `InitDB()`:
+   - `DB.AutoMigrate(&route.Route{})` creates/updates route table
+
 ### Next Steps
 
-**Session 3 priorities:**
-1. Create `cmd/route.go` with similar subcommand structure:
+**Session 4 priorities:**
+1. Create `cmd/route.go` with Cobra subcommands:
    - `goapi route add --project "..." --method GET --path "/users" [--description "..."]`
    - `goapi route list --project "..."`
    - `goapi route delete --project "..." --id <route-id>`
    - `goapi route update --project "..." --id <route-id> [flags]`
-2. Implement route data model in `internal/route/route.go`:
-   - Route struct with fields: ID, ProjectID (foreign key), Method, Path, Description, DateCreated
-   - Relationships: Route belongs to Project
-3. Implement route storage CRUD in `internal/storage/storage.go`:
-   - `CreateRoute()`, `GetRoute()`, `ListRoutesByProject()`, `DeleteRoute()`, `UpdateRoute()`
-   - Add `AutoMigrate(&route.Route{})` to InitDB
-4. Test route command workflow
-5. Begin work on API testing functionality (`cmd/test.go`)
+   - Validate method names (convert CLI string input to route.HTTPMethod)
+   - Validate project exists before adding route
+
+2. Test route command workflow end-to-end:
+   - Create routes for a project
+   - List routes
+   - Update route fields
+   - Delete routes
+   - Error handling (invalid project, invalid method, route not found)
+
+3. Begin API testing functionality:
+   - Create `internal/api/client.go` — HTTP client abstraction
+   - Design request/response handling
+   - Implement `cmd/test.go` for executing routes
 
 ### Architectural Decisions Made
 
