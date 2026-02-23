@@ -58,7 +58,6 @@ var routeAddCmd = &cobra.Command{
 	},
 }
 
-// TODO: implement listCmd
 var routeListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List routes for a project",
@@ -115,9 +114,17 @@ var routeDeleteCmd = &cobra.Command{
 	Short: "Delete a route",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// TODO: Extract flags (project, id)
-		// TODO: Validate route exists
-		// TODO: Delete route
-		// TODO: Print success message
+		projectName, _ := cmd.Flags().GetString("project")
+		_, err := storage.GetProject(projectName)
+		if err != nil {
+			return fmt.Errorf("failed to find project '%s': %w", projectName, err)
+		}
+		id, _ := cmd.Flags().GetUint("id")
+		if err := storage.DeleteRoute(id); err != nil {
+			return fmt.Errorf("failed to delete route from project: %w", err)
+		}
+		fmt.Printf("Route id %d deleted from project '%s'\n", id, projectName)
+
 		return nil
 	},
 }
@@ -146,6 +153,15 @@ func init() {
 
 	routeListCmd.Flags().StringP("project", "p", "", "Project name (required)")
 	if err := routeListCmd.MarkFlagRequired("project"); err != nil {
+		panic(err)
+	}
+
+	routeDeleteCmd.Flags().StringP("project", "p", "", "Project name (required)")
+	if err := routeAddCmd.MarkFlagRequired("project"); err != nil {
+		panic(err)
+	}
+	routeDeleteCmd.Flags().UintP("id", "i", 0, "Route ID (required)")
+	if err := routeDeleteCmd.MarkFlagRequired("id"); err != nil {
 		panic(err)
 	}
 }
