@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strings"
+	"text/tabwriter"
 
 	"github.com/raworiginal/goapi/internal/route"
 	"github.com/raworiginal/goapi/internal/storage"
@@ -14,7 +16,6 @@ var routeCmd = &cobra.Command{
 	Short: "Manage API routes",
 }
 
-// TODO: implement addCmd
 var routeAddCmd = &cobra.Command{
 	Use:   "add",
 	Short: "Add a new route to a project",
@@ -63,8 +64,33 @@ var routeListCmd = &cobra.Command{
 	Short: "List routes for a project",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// TODO: Extract project flag
+		projectName, _ := cmd.Flags().GetString("project")
+		p, err := storage.GetProject(projectName)
+		if err != nil {
+			return fmt.Errorf("failed to get project '%s': %w", projectName, err)
+		}
 		// TODO: List routes for that project
+		routes, err := storage.ListRoutesByProject(p.ID)
+		if err != nil {
+			return fmt.Errorf("failed to list routes for project: %w", err)
+		}
 		// TODO: Display in table format
+		if len(routes) == 0 {
+			fmt.Printf("No routes found for project '%s'\n", projectName)
+			return nil
+		}
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		if _, err := fmt.Fprintln(w, "ID\tMethod\tPath"); err != nil {
+			return fmt.Errorf("failed to write header: %w", err)
+		}
+		for _, r := range routes {
+			if _, err := fmt.Fprintf(w, "%d\t%s\t%s\n", r.ID, r.Method, r.Path); err != nil {
+				return fmt.Errorf("failed to write table line: %w", err)
+			}
+		}
+		if err := w.Flush(); err != nil {
+			return err
+		}
 		return nil
 	},
 }
@@ -117,4 +143,9 @@ func init() {
 		panic(err)
 	}
 	routeAddCmd.Flags().StringP("description", "d", "", "Route description (optional)")
+
+	routeListCmd.Flags().StringP("project", "p", "", "Project name (required)")
+	if err := routeListCmd.MarkFlagRequired("project"); err != nil {
+		panic(err)
+	}
 }
