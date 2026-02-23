@@ -8,5 +8,9 @@
       "Write(./go.mod)",
       "Write(./go.sum)"
     ]
+  },
+  "enabledPlugins": {
+    "learning-output-style@claude-plugins-official": true,
+    "gopls-lsp@claude-plugins-official": true
   }
 }
