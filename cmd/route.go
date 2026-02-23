@@ -29,20 +29,9 @@ var routeAddCmd = &cobra.Command{
 			return fmt.Errorf("failed to get project '%s': %w", projectName, err)
 		}
 		methodStr = strings.ToUpper(methodStr)
-		var httpMethod route.HTTPMethod
-		switch methodStr {
-		case "GET":
-			httpMethod = route.GET
-		case "POST":
-			httpMethod = route.POST
-		case "PUT":
-			httpMethod = route.PUT
-		case "DELETE":
-			httpMethod = route.DELETE
-		case "PATCH":
-			httpMethod = route.PATCH
-		default:
-			return fmt.Errorf("invalid HTTP method: %s. Valid methods are: GET, POST, PUT, PATCH, DELETE", methodStr)
+		httpMethod, err := route.ParseHTTPMethod(methodStr)
+		if err != nil {
+			return err
 		}
 		r := &route.Route{
 			ProjectID:   p.ID,
@@ -100,15 +89,41 @@ var routeUpdateCmd = &cobra.Command{
 	Short: "Update a route",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// TODO: Extract flags (project, id, and optional: method, path, description)
+		projectName, _ := cmd.Flags().GetString("project")
+		id, _ := cmd.Flags().GetUint("id")
+		methodStr, _ := cmd.Flags().GetString("method")
+		path, _ := cmd.Flags().GetString("path")
+		description, _ := cmd.Flags().GetString("description")
 		// TODO: Validate route exists
+		_, err := storage.GetProject(projectName)
+		if err != nil {
+			return fmt.Errorf("project not found: %w", err)
+		}
 		// TODO: Create UpdateRouteInput with non-nil values
+		updates := &route.UpdateRouteInput{}
+		if methodStr != "" {
+			httpMethod, err := route.ParseHTTPMethod(methodStr)
+			if err != nil {
+				return err
+			}
+			updates.Method = &httpMethod
+		}
+		if path != "" {
+			updates.Path = &path
+		}
+		if description != "" {
+			updates.Description = &description
+		}
 		// TODO: Call storage.UpdateRoute()
+		if err := storage.UpdateRoute(id, updates); err != nil {
+			return err
+		}
 		// TODO: Print success message
+		fmt.Printf("Project '%s' route id %d updated successfully\n", projectName, id)
 		return nil
 	},
 }
 
-// TODO: implement deleteCmd
 var routeDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "Delete a route",
@@ -137,6 +152,7 @@ func init() {
 	routeCmd.AddCommand(routeUpdateCmd)
 	routeCmd.AddCommand(routeDeleteCmd)
 	// registerFlags
+	// Add command flags
 	routeAddCmd.Flags().StringP("project", "p", "", "Project name (required)")
 	if err := routeAddCmd.MarkFlagRequired("project"); err != nil {
 		panic(err)
@@ -151,13 +167,28 @@ func init() {
 	}
 	routeAddCmd.Flags().StringP("description", "d", "", "Route description (optional)")
 
+	// List command flags
 	routeListCmd.Flags().StringP("project", "p", "", "Project name (required)")
 	if err := routeListCmd.MarkFlagRequired("project"); err != nil {
 		panic(err)
 	}
 
+	// Update command flags
+	routeUpdateCmd.Flags().StringP("project", "p", "", "Project name (required)")
+	if err := routeUpdateCmd.MarkFlagRequired("project"); err != nil {
+		panic(err)
+	}
+	routeUpdateCmd.Flags().UintP("id", "i", 0, "Route ID (required)")
+	if err := routeUpdateCmd.MarkFlagRequired("id"); err != nil {
+		panic(err)
+	}
+	routeUpdateCmd.Flags().StringP("method", "m", "", "HTTP method (optional)")
+	routeUpdateCmd.Flags().StringP("path", "", "", "Route path (optional)")
+	routeUpdateCmd.Flags().StringP("description", "d", "", "Route description (optional)")
+
+	// Delete command flags
 	routeDeleteCmd.Flags().StringP("project", "p", "", "Project name (required)")
-	if err := routeAddCmd.MarkFlagRequired("project"); err != nil {
+	if err := routeDeleteCmd.MarkFlagRequired("project"); err != nil {
 		panic(err)
 	}
 	routeDeleteCmd.Flags().UintP("id", "i", 0, "Route ID (required)")

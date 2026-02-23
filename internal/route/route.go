@@ -1,7 +1,11 @@
 // Package route handles the routes for the database
 package route
 
-import "time"
+import (
+	"fmt"
+	"strings"
+	"time"
+)
 
 type HTTPMethod string
 
@@ -26,4 +30,21 @@ type UpdateRouteInput struct {
 	Method      *HTTPMethod `json:"method,omitempty"`
 	Path        *string     `json:"path,omitempty"`
 	Description *string     `json:"description,omitempty"`
+}
+
+func ParseHTTPMethod(s string) (HTTPMethod, error) {
+	switch strings.ToUpper(s) {
+	case "GET":
+		return GET, nil
+	case "POST":
+		return POST, nil
+	case "PUT":
+		return PUT, nil
+	case "DELETE":
+		return DELETE, nil
+	case "PATCH":
+		return PATCH, nil
+	default:
+		return "", fmt.Errorf("invalid HTTP method: %s. Valid methods are: GET, POST, PUT, PATCH, DELETE", s)
+	}
 }
