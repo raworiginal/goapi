@@ -8,6 +8,9 @@ import (
 
 // CreateRoute Adds new route to project in database
 func CreateRoute(r *route.Route) error {
+	if r.Name == "" {
+		return fmt.Errorf("route name cannot be empty")
+	}
 	result := DB.Create(r)
 	if result.Error != nil {
 		return result.Error
@@ -34,9 +37,17 @@ func GetRoute(id uint) (*route.Route, error) {
 	return &r, nil
 }
 
+// GetRouteByName retrieves a route by project ID and name
+func GetRouteByName(projectID uint, name string) (*route.Route, error) {
+	var r route.Route
+	if err := DB.Where("name = ? AND project_id = ?", name, projectID).First(&r).Error; err != nil {
+		return nil, err
+	}
+	return &r, nil
+}
+
 // UpdateRoute modifies an existing route
 func UpdateRoute(id uint, updates *route.UpdateRouteInput) error {
-	// Your implementation
 	result := DB.Model(&route.Route{}).Where("id = ?", id).Updates(updates)
 	if result.Error != nil {
 		return result.Error

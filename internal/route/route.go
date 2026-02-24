@@ -19,7 +19,8 @@ const (
 
 type Route struct {
 	ID          uint       `gorm:"primaryKey" json:"id"`
-	ProjectID   uint       `gorm:"foreignKey" json:"project_id"`
+	ProjectID   uint       `gorm:"foreignKey; uniqueIndex:idx_project_route_name" json:"project_id"`
+	Name        string     `gorm:"uniqueIndex:idx_project_route_name" json:"name"`
 	Method      HTTPMethod `json:"method"`
 	Path        string     `json:"path"`
 	Description string     `json:"description"`
@@ -27,6 +28,7 @@ type Route struct {
 }
 
 type UpdateRouteInput struct {
+	Name        *string     `json:"name,omitempty"`
 	Method      *HTTPMethod `json:"method,omitempty"`
 	Path        *string     `json:"path,omitempty"`
 	Description *string     `json:"description,omitempty"`
