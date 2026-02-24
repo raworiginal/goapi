@@ -230,21 +230,78 @@ Consider: `~/.config/goapi/` or `~/.goapi/` for user data.
    - Flag validation working (required vs optional)
    - Table formatting with `text/tabwriter` works cleanly
 
+**Session 5:**
+1. ✅ Enhanced Route model with human-readable names:
+   - **Data Model:** Added `Name` field to Route struct with composite unique index `(ProjectID, Name)`
+   - **Database:** GORM composite unique constraint prevents duplicate names per project
+   - **Storage Layer:** Added `GetRouteByName(projectID uint, name string)` helper function
+   - **Name Validation:** CreateRoute validates names are not empty before persisting
+
+2. ✅ Updated all route CRUD operations:
+   - **CreateRoute()** — Now validates Name is not empty
+   - **GetRouteByName()** — NEW helper function for name-based lookups (supports name-based CLI)
+   - **UpdateRoute()** — Supports renaming via UpdateRouteInput.Name field
+   - **ListRoutesByProject()** — No changes (already returns all routes for project)
+   - **DeleteRoute()** — No changes (still uses ID internally)
+
+3. ✅ Refactored route CLI commands to use names:
+   - **route add** — Added `--name` flag (optional; auto-generates "METHOD path" if not provided)
+   - **route list** — Displays ID, Name, Method, Path in aligned table with tabwriter
+   - **route update** — Changed from `--id` to `--route` (name-based); added `--rename` for renaming
+   - **route delete** — Changed from `--id` to `--route` (name-based identifier)
+   - **Pattern:** CLI uses names, storage layer uses IDs internally (decouples UX from implementation)
+
+4. ✅ Improved error handling consistency:
+   - Wrapped all error returns with user-friendly context using `fmt.Errorf(..., %w, err)`
+   - **Consistent patterns:**
+     - `ParseHTTPMethod` errors: `"invalid HTTP method 'X': <error>"`
+     - `GetRouteByName` errors: `"route 'X' not found in project 'Y': <error>"`
+     - Storage operation errors: `"failed to <operation> route 'X': <error>"`
+   - Users see context about what failed, what input caused it, and the underlying error
+
+5. ✅ Improved project listing UI:
+   - **Before:** Simple line format `Name - BaseURL (DateCreated)`
+   - **After:** Professional table with 4 columns (Name, Base URL, Description, Date Created)
+   - **Formatting:** Used text/tabwriter for clean alignment; dates formatted as `YYYY-MM-DD HH:MM`
+   - **Consistency:** Matches route list table styling for unified CLI experience
+
+6. ✅ Project maintenance:
+   - Added `.claude/memory/` and `.claude/settings.local.json` to `.gitignore`
+   - Kept `.claude/settings.json` in version control (team configuration with plugins and permissions)
+
+7. ✅ Tested all changes end-to-end:
+   - Route CRUD with names (add, list, update/rename, delete) all working
+   - Error messages tested (nonexistent routes, invalid methods, unique constraint violations)
+   - Project listing table rendering correctly with variable-length data
+   - All commands compile without errors
+
 ### Next Steps
 
-**Session 5 priorities:**
-1. Add route names to improve consistency:
-   - Add `Name` field to Route struct (unique per project)
-   - Update database migration
-   - Modify all route CRUD operations to support names
-   - Update CLI commands to use names instead of IDs
-   - Allows users to reference routes by human-readable names
+**Session 6 priorities:**
+1. **API Client Design** (`internal/api/client.go`):
+   - Create HTTP client abstraction with interface for easy mocking
+   - Support GET, POST, PUT, DELETE, PATCH methods
+   - Handle request/response bodies, headers, and status codes
+   - Implement timeout and connection error handling
+   - Plan JWT authorization support for future auth command
 
-2. Plan API client design and test command:
-   - Create `internal/api/client.go` — HTTP client abstraction
-   - Design request/response handling
-   - Plan `cmd/test.go` for executing routes
-   - Consider output formatting (terminal, JSON file)
+2. **Test Command Implementation** (`cmd/test.go`):
+   - Execute a single route or all routes in a project
+   - Flags: `--project`, `--route` (optional, run all if not specified)
+   - Display results: status code, response time, response body
+   - Plan output formatting (terminal pretty-print, JSON file export)
+
+3. **Output Formatting** (`internal/output/`):
+   - Design result struct (route, method, status, duration, body)
+   - Implement terminal formatter (aligned table or pretty JSON)
+   - Implement JSON file exporter for batch test results
+   - Consider result aggregation for project-level test runs
+
+4. **Consider for later:**
+   - JWT auth command (`cmd/auth.go`) — Store tokens securely
+   - Route variables/templating (e.g., `{id}`, `{user_id}`) in paths
+   - Interactive TUI mode with BubbleTea
+   - Batch testing with result summaries
 
 ### Architectural Decisions Made
 
@@ -252,3 +309,5 @@ Consider: `~/.config/goapi/` or `~/.goapi/` for user data.
 - **Primary Key:** Numeric ID with unique constraint on name (allows future renaming, better for relationships)
 - **Data Location:** `~/.config/goapi/` (standard XDG-like path)
 - **ORM:** GORM (selected for learning and maintainability)
+- **Route Identification:** CLI uses human-readable names, storage uses numeric IDs (clean separation of concerns)
+- **Error Handling:** Always wrap errors with context at each layer using `%w` verb (idiomatic Go)
