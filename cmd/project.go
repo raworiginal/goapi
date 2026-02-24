@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/url"
+	"os"
+	"text/tabwriter"
 
 	"github.com/raworiginal/goapi/internal/project"
 	"github.com/raworiginal/goapi/internal/storage"
@@ -44,7 +46,6 @@ var createCmd = &cobra.Command{
 	},
 }
 
-// TODO: Implement listCmd
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all projects",
@@ -58,8 +59,17 @@ var listCmd = &cobra.Command{
 			return nil
 		}
 
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
+		if _, err := fmt.Fprintln(w, "Name\tBase URL\tDescription\tDate Created"); err != nil {
+			return fmt.Errorf("failed to write header: %w", err)
+		}
 		for _, p := range projects {
-			fmt.Printf("%v - %v (%v)\n", p.Name, p.BaseURL, p.DateCreated)
+			if _, err := fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", p.Name, p.BaseURL, p.Description, p.DateCreated.Format("2006-01-02 15:04")); err != nil {
+				return fmt.Errorf("failed to write table line: %w", err)
+			}
+		}
+		if err := w.Flush(); err != nil {
+			return fmt.Errorf("failed to write projects table: %w", err)
 		}
 
 		return nil
